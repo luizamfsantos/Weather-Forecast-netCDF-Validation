@@ -95,20 +95,17 @@ def write_dataframe_to_netcdf(df, file_path):
 
     dataset = None
     try:
-        dataset = nc.Dataset(file_path, 'w', format='NETCDF4')
+        with nc.Dataset(file_path, 'w', format='NETCDF4') as dataset:
 
-        for col in df.columns:
-            dataset.createDimension(col, df[col].shape[0])
+            for col in df.columns:
+                dataset.createDimension(col, df[col].shape[0])
 
-        for col in df.columns:
-            var = dataset.createVariable(col, df[col].dtype, (col,))
-            var[:] = df[col].values
+            for col in df.columns:
+                var = dataset.createVariable(col, df[col].dtype, (col,))
+                var[:] = df[col].values
 
     except IOError as e:
         raise e
-    finally:
-        if dataset is not None:
-            dataset.close()
 
 
 if __name__ == '__main__':
