@@ -28,44 +28,41 @@ def read_netcdf_to_dataframe(file_name, city_coordinates, temp_key = None, lines
     Example:
     >>> df = read_netcdf_to_dataframe('example.nc', (lat, lon))
     """
-    # Open file
-    data = nc.Dataset(file_name, "r", format = "NETCDF4")
+    with nc.Dataset(file_name, "r", format = "NETCDF4") as data:
 
-    # Get column names
-    variable_names = list(data.variables.keys())
+        # Get column names
+        variable_names = list(data.variables.keys())
 
-    # Get temperature column name
-    if temp_key is None:
-        if 'temperatura' in variable_names:
-            temperature_column_name = 'temperatura'
-        elif 't2m' in variable_names:
-            temperature_column_name = 't2m'
+        # Get temperature column name
+        if temp_key is None:
+            if 'temperatura' in variable_names:
+                temperature_column_name = 'temperatura'
+            elif 't2m' in variable_names:
+                temperature_column_name = 't2m'
 
-    # Check if temperature_column_name is in the file
-    if temperature_column_name not in variable_names:
-        raise KeyError("The column name is not present in the NetCDF file.")
-    
-    # Check if time is in the file
-    if 'time' not in variable_names:
-        raise KeyError("Time is not present in the NetCDF file.")
-    
-    # Create a dictionary to store the data
-    data_dict = {}
+        # Check if temperature_column_name is in the file
+        if temperature_column_name not in variable_names:
+            raise KeyError("The column name is not present in the NetCDF file.")
+        
+        # Check if time is in the file
+        if 'time' not in variable_names:
+            raise KeyError("Time is not present in the NetCDF file.")
+        
+        # Create a dictionary to store the data
+        data_dict = {}
 
-    # Get the time data
-    data_dict["time"] = data.variables["time"][:].data[:]
-    if lines is not None:
-        data_dict["time"] = data_dict["time"][:lines]
+        # Get the time data
+        data_dict["time"] = data.variables["time"][:].data[:]
+        if lines is not None:
+            data_dict["time"] = data_dict["time"][:lines]
 
-    # Get the temperature data
-    data_dict['temperature'] = []
-    for i in range(len(data_dict["time"])):
-        data_dict['temperature'].append(data.variables[temperature_column_name][i].data[city_coordinates[0],city_coordinates[1]])
-        if lines is not None and i == lines-1:
-            break
+        # Get the temperature data
+        data_dict['temperature'] = []
+        for i in range(len(data_dict["time"])):
+            data_dict['temperature'].append(data.variables[temperature_column_name][i].data[city_coordinates[0],city_coordinates[1]])
+            if lines is not None and i == lines-1:
+                break
 
-    # Close file
-    data.close()
 
     # return DataFrame
     df = pd.DataFrame(data_dict)
